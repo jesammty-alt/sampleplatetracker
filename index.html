@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> SUERTE MOTOPLAZA Plate Finder</title>
+  <link rel="icon" type="image/png" href="logo.jpg">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      text-align: center;
+      padding: 60px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 32px;
+    }
+
+    input {
+      padding: 12px;
+      width: 260px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      margin-left: 5px;
+      cursor: pointer;
+      border: none;
+      background: #000000; 
+      color: white;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background: #FFFF00;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background: white;
+      display: inline-block;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      text-align: left;
+      min-width: 320px;
+    }
+
+    .hidden { display: none; }
+
+    .status {
+      font-weight: bold;
+      color: orange;
+    }
+
+    #loading {
+      margin-top: 20px;
+      color: gray;
+    }
+
+    #notFound {
+      margin-top: 20px;
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>SUERTE MOTOPLAZA PLATE FINDER</h1>
+
+<input type="text" id="search" placeholder="Enter Plate Number">
+<button onclick="findPlate()">Find</button>
+
+<div id="loading">Loading database...</div>
+
+<div id="resultBox" class="result hidden">
+  <p><strong>Plate Number:</strong> <span id="r_plate"></span></p>
+  <p><strong>Box Number:</strong> <span id="r_box"></span></p>
+  <p><strong>Date Pullout:</strong> <span id="r_date"></span></p>
+  <p><strong>Status:</strong> <span id="r_status" class="status"></span></p>
+</div>
+
+<p id="notFound" class="hidden">Plate not found</p>
+
+<script>
+let data = [];
+
+// ✅ YOUR GOOGLE SHEET LINK
+const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSX6JBOlpnh23vlBA9izMwi0nqMLc5NyOB5-ihziGHIe1vNYIxY__RUGyKWFE-vGBkEPxXh1GefRX6o/pub?output=csv";
+
+// 🔄 LOAD DATA
+fetch(sheetURL)
+  .then(res => res.text())
+  .then(csv => {
+    const rows = csv.split("\n").slice(1);
+
+    data = rows.map(row => {
+      const cols = row.split(",");
+
+      return {
+        plate: (cols[0] || "").toLowerCase().replace(/\s+/g, '').trim(),
+        displayPlate: (cols[0] || "").trim(),
+        box: (cols[1] || "").trim(),
+        date: (cols[2] || "").trim(),
+        status: (cols[3] || "").trim(),
+      };
+    });
+
+    document.getElementById("loading").innerText = "Database Loaded ✅";
+  })
+  .catch(err => {
+    document.getElementById("loading").innerText = "Failed to load data ❌";
+    console.error(err);
+  });
+
+// 🔍 SEARCH FUNCTION
+function findPlate() {
+  const input = document.getElementById("search").value
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .trim();
+
+  const result = data.find(item => item.plate === input);
+
+  if (result) {
+    document.getElementById("resultBox").classList.remove("hidden");
+    document.getElementById("notFound").classList.add("hidden");
+
+    document.getElementById("r_plate").innerText = result.displayPlate;
+    document.getElementById("r_box").innerText = result.box;
+    document.getElementById("r_date").innerText = result.date;
+    document.getElementById("r_status").innerText = result.status;
+
+  } else {
+    document.getElementById("resultBox").classList.add("hidden");
+    document.getElementById("notFound").classList.remove("hidden");
+  }
+}
+
+// 🔘 ENTER KEY SUPPORT
+document.getElementById("search").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    findPlate();
+  }
+});
+</script>
+
+</body>
+</html>
